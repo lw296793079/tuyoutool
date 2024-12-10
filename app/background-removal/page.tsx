@@ -33,7 +33,7 @@ export default function BackgroundRemoval() {
                 </div>
                 <div className="flex justify-center">
                   <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white">
-                    <Image className="mr-2 h-5 w-5" /> 去除背景
+                  <Image className="mr-2 h-5 w-5" aria-label="去除背景图标" /> 去除背景
                   </Button>
                 </div>
               </div>
