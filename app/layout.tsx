@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from 'next/font/google'
 import "./globals.css"
-
+import Script from 'next/script'
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
@@ -16,8 +16,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh" className="h-full">
+      
       <body className={`${inter.className} min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100`}>
         {children}
+        <Script 
+          strategy="afterInteractive"
+          id="baidu-analytics"
+          src="https://hm.baidu.com/hm.js?8b9813efd52e0e3e2ee0e973503ee144"
+        />
       </body>
     </html>
   )

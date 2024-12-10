@@ -65,7 +65,7 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image 
-            src="/placeholder.svg" 
+            src="/logo.png" 
             alt="图优工具" 
             width={32} 
             height={32} 
