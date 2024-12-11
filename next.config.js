@@ -8,7 +8,14 @@ const nextConfig = {
       },
     ],
   },
-  // 如果你有其他配置，也放在这里
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@/components': require('path').resolve(__dirname, 'components'),
+      '@/lib': require('path').resolve(__dirname, 'lib'),
+    }
+    return config
+  }
 }
 
 module.exports = nextConfig 
