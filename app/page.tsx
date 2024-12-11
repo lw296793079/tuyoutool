@@ -2,7 +2,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { themeConfig } from '@/lib/theme-config'
-
+import { Circle } from 'lucide-react' // 使用一个现有的图标作为占位符
 import Link from "next/link"
 import { ArrowRight, Image, FileType, Wand2, Calculator } from 'lucide-react'
 
@@ -11,8 +11,7 @@ export default function Home() {
     <main className="flex flex-col min-h-screen">
       <Header />
       <div className="flex-grow">
-        {/* Hero Section */}
-        {/* <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20"> */}
+        
         <section className={`
           bg-gradient-to-r 
           ${themeConfig.colors.primary.gradient}
@@ -31,14 +30,15 @@ export default function Home() {
 
         {/* Main Features */}
         <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-5">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">我们的核心功能</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
               {[
                 { title: "图片处理", desc: "调整大小、添加水印、裁剪等", href: "/image-processing", icon: Image },
                 { title: "格式转换", desc: "图片、文档、音频、视频格式转换", href: "/format-conversion", icon: FileType },
                 { title: "生成工具", desc: "二维码、密码、名片设计等", href: "/generators", icon: Wand2 },
                 { title: "实用工具", desc: "计算器、OCR、图片拼接等", href: "/utilities", icon: Calculator },
+                { title: "测试页", desc: "实验新功能和设计", href: "/test-page", icon: Circle }, // 新增测试页
               ].map((item, index) => (
                 <div key={index} className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 hover:scale-105">
                   <item.icon className="w-12 h-12 text-blue-500 mb-4" />

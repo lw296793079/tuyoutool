@@ -20,40 +20,40 @@ const menuItems = [
   {
     title: "格式转换",
     items: [
-      "图片格式转换",
-      "PDF转Word",
-      "音频格式转换",
-      "视频格式转换",
+      "图片格式转换", // JPG, PNG, GIF, WebP等
+      "文档格式转换", // PDF, Word, Excel, PowerPoint
+      "音频格式转换", // MP3, WAV, FLAC, AAC等
+      "视频格式转换", // MP4, AVI, MKV, MOV等
     ]
   },
   {
     title: "生成工具",
     items: [
       "二维码生成",
-      "随机密码生成",
+      "密码生成",
       "名片设计",
     ]
   },
   {
     title: "实用工具",
     items: [
-      "BMI计算器",
-      "贷款计算器",
-      "文字识别(OCR)",
+      "计算器",
+      "OCR文字识别",
       "图片拼接",
-    ]
-  },
-  {
-    title: "高级功能",
-    items: [
-      "AI图像生成",
-      "背景去除",
-      "图像修复",
-      "智能裁剪",
-      "颜色提取",
-      "图像风格迁移",
+      "单位换算",
     ]
   }
+  // {
+  //   title: "高级功能",
+  //   items: [
+  //     "AI图像生成",
+  //     "背景去除",
+  //     "图像修复",
+  //     "智能裁剪",
+  //     "颜色提取",
+  //     "图像风格迁移",
+  //   ]
+  // }
 ]
 
 export function Header() {
@@ -110,6 +110,7 @@ export function Header() {
           <Link href="/format-conversion" className="hover:text-blue-500 transition-colors duration-200">格式转换</Link>
           <Link href="/generators" className="hover:text-blue-500 transition-colors duration-200">生成工具</Link>
           <Link href="/utilities" className="hover:text-blue-500 transition-colors duration-200">实用工具</Link>
+          <Link href="/test-page" className="hover:text-blue-500 transition-colors duration-200">测试页</Link>
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
@@ -129,6 +130,7 @@ export function Header() {
             <Link href="/format-conversion" className="block hover:text-blue-500 transition-colors duration-200">格式转换</Link>
             <Link href="/generators" className="block hover:text-blue-500 transition-colors duration-200">生成工具</Link>
             <Link href="/utilities" className="block hover:text-blue-500 transition-colors duration-200">实用工具</Link>
+            <Link href="/test-page" className="block hover:text-blue-500 transition-colors duration-200">测试页</Link>
           </nav>
           <div className="mt-4 space-y-2">
             <button className="w-full px-4 py-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">登录</button>
