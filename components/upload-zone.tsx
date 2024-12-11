@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from 'react'
-import { Upload } from 'lucide-react' // 使用 Spinner 替代 Loader2
+import { useState, useCallback } from 'react'
+import { Upload } from 'lucide-react'
 import Image from 'next/image'
 
 interface UploadZoneProps {
@@ -20,7 +20,7 @@ export const UploadZone = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = useCallback((file: File) => {
     // 检查文件类型
     if (!file.type.startsWith('image/')) {
       setError('请上传图片文件')
@@ -39,6 +39,8 @@ export const UploadZone = ({
     const reader = new FileReader()
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string)
+      // 移动到这里调用
+      onFileSelect?.(file)
     }
     reader.readAsDataURL(file)
 
@@ -48,14 +50,12 @@ export const UploadZone = ({
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(timer)
-          // 上传完成后调用回调
-          onFileSelect?.(file)
           return 100
         }
         return prev + 10
       })
     }, 200)
-  }
+  }, [maxSize, onFileSelect])
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()

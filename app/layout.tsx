@@ -2,6 +2,9 @@ import type { Metadata } from "next"
 import { Inter } from 'next/font/google'
 import "./globals.css"
 import Script from 'next/script'
+import { Toaster } from "sonner"  // 新增这一行
+
+
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
@@ -19,6 +22,7 @@ export default function RootLayout({
       
       <body className={`${inter.className} min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100`}>
         {children}
+        <Toaster />  {/* 新增这一行 */}
         <Script 
           strategy="afterInteractive"
           id="baidu-analytics"
