@@ -1,5 +1,10 @@
 {
   "buildCommand": "npm install --force && npm run build",
-  "installCommand": "apt-get update && apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev && npm install --force",
-  "framework": "nextjs"
+  "installCommand": "npm install --force",
+  "framework": "nextjs",
+  "build": {
+    "env": {
+      "NEXT_SHARP_PATH": "/tmp/node_modules/sharp"
+    }
+  }
 } 
