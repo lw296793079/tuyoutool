@@ -9,6 +9,8 @@ import Image from "next/image"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { ImageCropper } from '@/components/image-cropper'
+import type { CropArea } from '@/components/image-cropper/types'
 
 // 定义功能类型
 const features = [
@@ -39,11 +41,13 @@ export default function ImageProcessing() {
   const [watermarkSize, setWatermarkSize] = useState('25')
   const [watermarkPosition, setWatermarkPosition] = useState('rightBottom')
   const [opacity, setOpacity] = useState('50')
+  const [imageInfo, setImageInfo] = useState<{ width: number; height: number } | null>(null)
+  const [currentCropArea, setCurrentCropArea] = useState<CropArea | null>(null)
 
   // 保持原有的文件处理函数
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      toast.error("请上传图片文件")
+      toast.error("请上传片文件")
       return
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -54,10 +58,15 @@ export default function ImageProcessing() {
     const url = URL.createObjectURL(file)
     setPreviewUrl(url)
     
-    const img = new (window.Image || HTMLImageElement)(0, 0)
+    const img = document.createElement('img')
     img.onload = () => {
+      setImageInfo({
+        width: img.width,
+        height: img.height
+      })
       setImageWidth(img.width)
       setImageHeight(img.height)
+      URL.revokeObjectURL(url)
     }
     img.src = url
   }
@@ -74,8 +83,11 @@ export default function ImageProcessing() {
       (watermarkType === 'image' && watermarkImage)
     )
 
-    if (!width && !height && !hasWatermarkSettings) {
-      toast.error("请至少设置一项处理选项")
+    if (selectedFeature === 'crop' && !currentCropArea) {
+      toast.error("请先选择裁剪区域")
+      return
+    } else if (selectedFeature !== 'crop' && !width && !height && !hasWatermarkSettings) {
+      toast.error("���至少设置一项处理选项")
       return
     }
 
@@ -84,46 +96,47 @@ export default function ImageProcessing() {
       const formData = new FormData()
       formData.append('file', selectedFile)
 
-      if (width) formData.append('width', width)
-      if (height) formData.append('height', height)
+      let apiEndpoint = '/api/process-image'
       
-      if (hasWatermarkSettings) {
-        formData.append('watermarkType', watermarkType)
-        if (watermarkType === 'text' || watermarkType === 'pattern' || watermarkType === 'diagonal') {
-          formData.append('watermarkText', watermarkText)
-          formData.append('fontSize', (parseInt(displayFontSize) * 30).toString())
-          formData.append('fontColor', fontColor)
-          formData.append('opacity', opacity)
-          formData.append('position', watermarkPosition)
-          formData.append('fontStyle', fontStyle)
-          formData.append('rotation', rotation)
-        } else if (watermarkType === 'image' && watermarkImage) {
-          formData.append('watermarkImage', watermarkImage)
-          formData.append('opacity', opacity)
-          formData.append('position', watermarkPosition)
-          formData.append('watermarkSize', watermarkSize)
+      if (selectedFeature === 'crop' && currentCropArea) {
+        formData.append('x', Math.round(currentCropArea.x).toString())
+        formData.append('y', Math.round(currentCropArea.y).toString())
+        formData.append('width', Math.round(currentCropArea.width).toString())
+        formData.append('height', Math.round(currentCropArea.height).toString())
+        apiEndpoint = '/api/crop-image'
+      } else {
+        if (width) formData.append('width', width)
+        if (height) formData.append('height', height)
+        if (hasWatermarkSettings) {
+          formData.append('watermarkType', watermarkType)
+          if (watermarkType === 'text' || watermarkType === 'pattern' || watermarkType === 'diagonal') {
+            formData.append('watermarkText', watermarkText)
+            formData.append('fontSize', (parseInt(displayFontSize) * 30).toString())
+            formData.append('fontColor', fontColor)
+            formData.append('opacity', opacity)
+            formData.append('position', watermarkPosition)
+            formData.append('fontStyle', fontStyle)
+            formData.append('rotation', rotation)
+          } else if (watermarkType === 'image' && watermarkImage) {
+            formData.append('watermarkImage', watermarkImage)
+            formData.append('opacity', opacity)
+            formData.append('position', watermarkPosition)
+            formData.append('watermarkSize', watermarkSize)
+          }
         }
       }
 
-      const response = await fetch('/api/process-image', {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         body: formData,
       })
 
-      if (!response.ok) {
-        throw new Error('处理失败')
-      }
+      if (!response.ok) throw new Error('处理失败')
 
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       setPreviewUrl(url)
       toast.success('处理完成')
-
-      // 创建下载链接
-      const link = document.createElement('a')
-      link.href = url
-      link.download = 'processed-image.jpg'
-      link.click()
     } catch (error) {
       console.error('处理错误:', error)
       toast.error('图片处理失败，请重试')
@@ -138,31 +151,61 @@ export default function ImageProcessing() {
 
     return (
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">宽度</label>
-          <Input 
-            type="number" 
-            placeholder="输入宽度" 
-            value={width}
-            onChange={(e) => setWidth(e.target.value)}
-            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
+        {/* 宽输入区域 */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-1">宽度</label>
+            <Input 
+              type="number" 
+              placeholder="输入宽度" 
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+          </div>
+          
+          {/* 交换按钮 - 使用左右箭头图标 */}
+          <button 
+            className="mt-6 p-2 hover:bg-gray-100 rounded-full"
+            onClick={() => {
+              const tempWidth = width
+              setWidth(height)
+              setHeight(tempWidth)
+            }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4-4m-4 4l4 4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-1">高度</label>
+            <Input 
+              type="number" 
+              placeholder="输入高度"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">高度</label>
-          <Input 
-            type="number" 
-            placeholder="输入高度"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
-            className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
+
+        {/* 尺寸信息展示 */}
+        <div className="flex items-center gap-2 text-sm">
+          {imageWidth > 0 && (
+            <span className="text-gray-500">
+              原始尺寸：{imageWidth} x {imageHeight} 像素
+            </span>
+          )}
+          {width && height && (
+            <>
+              <span className="text-gray-500 mx-2">→</span>
+              <span className="text-green-600">
+                修改后：{width} x {height} 像素
+              </span>
+            </>
+          )}
         </div>
-        {imageWidth > 0 && (
-          <p className="text-sm text-gray-500">
-            原始尺寸：{imageWidth} x {imageHeight} 像素
-          </p>
-        )}
       </div>
     );
   };
@@ -204,7 +247,7 @@ export default function ImageProcessing() {
               <div>
                 <div className="flex justify-between">
                   <label className="text-sm font-medium">字体大小</label>
-                  <span className="text-xs text-gray-500">数值越大文字越大</span>
+                  <span className="text-xs text-gray-500">数值大文字越大</span>
                 </div>
                 <Input 
                   type="number"
@@ -221,7 +264,7 @@ export default function ImageProcessing() {
                   onChange={(e) => handleFontStyleChange(e.target.value)}
                   className="w-full rounded-md border-gray-300 focus:border-blue-300 focus:ring focus:ring-blue-200"
                 >
-                  <option value="normal">普通</option>
+                  <option value="normal">���通</option>
                   <option value="bold">粗体</option>
                   <option value="italic">斜体</option>
                   <option value="bold-italic">粗斜体</option>
@@ -350,6 +393,25 @@ export default function ImageProcessing() {
     setFontStyle(value)
   }
 
+  // 添加裁剪控件渲染函数
+  const renderCropControls = () => {
+    if (selectedFeature !== 'crop') return null;
+
+    return (
+      <div className="space-y-4">
+        {previewUrl && (
+          <ImageCropper
+            imageUrl={previewUrl}
+            onCropComplete={(cropArea) => {
+              setCurrentCropArea(cropArea);  // 保存裁剪区域信息
+            }}
+            aspect={1}
+          />
+        )}
+      </div>
+    );
+  };
+
   return (
     <main className="flex flex-col min-h-screen">
       <Header />
@@ -422,6 +484,11 @@ export default function ImageProcessing() {
                       上传图片
                     </h2>
                     <UploadZone onFileSelect={handleFileSelect} />
+                    {imageInfo && (
+                      <div className="mt-2 text-sm text-gray-500">
+                        原始尺寸：{imageInfo.width} x {imageInfo.height} 像素
+                      </div>
+                    )}
                   </div>
 
                   {/* 预览区域 */}
@@ -447,7 +514,7 @@ export default function ImageProcessing() {
                             />
                           </div>
                         ) : (
-                          <p className="text-gray-500">图片预览区域</p>
+                          <p className="text-gray-500">片预览区域</p>
                         )}
                       </div>
                       {/* 下载按钮始终显示，但根据是否有图片来决定是否可用 */}
@@ -477,6 +544,7 @@ export default function ImageProcessing() {
                     <div className="bg-white shadow-sm rounded-xl p-4">
                       {renderResizeControls()}
                       {renderWatermarkControls()}
+                      {renderCropControls()}
                     </div>
                   </div>
                 )}

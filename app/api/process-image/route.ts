@@ -62,26 +62,6 @@ function createWatermarkSvg({
   const totalWidth = rotatedWidth + spacing * 2
   const totalHeight = rotatedHeight + spacing * 2
   
-  // 处理字体样式
-  let fontStyleCss = ''
-  let fontWeightCss = ''
-  
-  switch (fontStyle) {
-    case 'bold':
-      fontWeightCss = 'font-weight: bold;'
-      break
-    case 'italic':
-      fontStyleCss = 'font-style: italic;'
-      break
-    case 'bold-italic':
-      fontWeightCss = 'font-weight: bold;'
-      fontStyleCss = 'font-style: italic;'
-      break
-    default:
-      fontStyleCss = 'font-style: normal;'
-      fontWeightCss = 'font-weight: normal;'
-  }
-
   return `
     <svg width="${totalWidth}" height="${totalHeight}">
       <style>
@@ -89,8 +69,7 @@ function createWatermarkSvg({
           fill: ${fontColor}; 
           font-size: ${fontSize}px;
           font-family: Arial;
-          ${fontStyleCss}
-          ${fontWeightCss}
+          font-style: ${fontStyle};
         }
       </style>
       <text 
