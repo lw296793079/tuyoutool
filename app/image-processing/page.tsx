@@ -11,15 +11,18 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ImageCropper } from '@/components/image-cropper'
 import type { CropArea } from '@/components/image-cropper/types'
+import { Slider } from "@/components/ui/slider"
+import { CompressControls } from "@/components/compress-controls"
+import type { CompressSettings } from '@/components/compress-controls'
 
 // 定义功能类型
 const features = [
+  { id: 'compress', title: "图片压缩", desc: "在保持质量的同时压缩图片体积", icon: FileDown },
   { id: 'resize', title: "修改图片尺寸", desc: "调整图片大小，保持最佳质量", icon: ImageIcon },
   { id: 'watermark', title: "添加水印", desc: "为图片添加文字或图片水印", icon: FileText },
   { id: 'crop', title: "图片裁剪", desc: "自由裁剪图片区域", icon: Music },
   { id: 'adjust', title: "调整亮度/对比度", desc: "优化图片亮度和对比度", icon: Video },
-  { id: 'filter', title: "添加滤镜", desc: "应用专业的图片滤镜效果", icon: Palette },
-  { id: 'compress', title: "图片压缩", desc: "在保持质量的同时压缩图片体积", icon: FileDown }
+  { id: 'filter', title: "添加滤镜", desc: "应用专业的图片滤镜效果", icon: Palette }
 ]
 
 export default function ImageProcessing() {
@@ -43,6 +46,11 @@ export default function ImageProcessing() {
   const [opacity, setOpacity] = useState('50')
   const [imageInfo, setImageInfo] = useState<{ width: number; height: number } | null>(null)
   const [currentCropArea, setCurrentCropArea] = useState<CropArea | null>(null)
+  const [brightness, setBrightness] = useState('100')
+  const [contrast, setContrast] = useState('100')
+  const [compressSettings, setCompressSettings] = useState<CompressSettings | null>(null)
+
+
 
   // 保持原有的文件处理函数
   const handleFileSelect = async (file: File) => {
@@ -86,8 +94,11 @@ export default function ImageProcessing() {
     if (selectedFeature === 'crop' && !currentCropArea) {
       toast.error("请先选择裁剪区域")
       return
-    } else if (selectedFeature !== 'crop' && !width && !height && !hasWatermarkSettings) {
-      toast.error("���至少设置一项处理选项")
+    } else if (selectedFeature === 'compress' && !compressSettings) {
+      toast.error("请设置压缩参数")
+      return
+    } else if (selectedFeature !== 'crop' && selectedFeature !== 'compress' && !width && !height && !hasWatermarkSettings) {
+      toast.error("至少设置一项处理选项")
       return
     }
 
@@ -98,7 +109,17 @@ export default function ImageProcessing() {
 
       let apiEndpoint = '/api/process-image'
       
-      if (selectedFeature === 'crop' && currentCropArea) {
+      if (selectedFeature === 'compress' && compressSettings) {
+        formData.append('quality', compressSettings.quality.toString())
+        formData.append('outputFormat', compressSettings.outputFormat)
+        if (compressSettings.isAutoOptimize) {
+          formData.append('autoOptimize', 'true')
+        }
+        if (compressSettings.targetSize) {
+          formData.append('targetSize', compressSettings.targetSize.toString())
+        }
+        apiEndpoint = '/api/compress-image'
+      } else if (selectedFeature === 'crop' && currentCropArea) {
         formData.append('x', Math.round(currentCropArea.x).toString())
         formData.append('y', Math.round(currentCropArea.y).toString())
         formData.append('width', Math.round(currentCropArea.width).toString())
@@ -224,7 +245,7 @@ export default function ImageProcessing() {
             onChange={(e) => setWatermarkType(e.target.value)}
             className="w-full rounded-md border-gray-300 focus:border-blue-300 focus:ring focus:ring-blue-200"
           >
-            <option value="text">单个文字水印（可调整位置）</option>
+            <option value="text">单个文字水印（可整位置）</option>
             <option value="pattern">平铺水印（覆盖整个图片）</option>
             <option value="diagonal">对角线水印（固定45度）</option>
             <option value="image">图片水印</option>
@@ -264,7 +285,7 @@ export default function ImageProcessing() {
                   onChange={(e) => handleFontStyleChange(e.target.value)}
                   className="w-full rounded-md border-gray-300 focus:border-blue-300 focus:ring focus:ring-blue-200"
                 >
-                  <option value="normal">���通</option>
+                  <option value="normal">普通</option>
                   <option value="bold">粗体</option>
                   <option value="italic">斜体</option>
                   <option value="bold-italic">粗斜体</option>
@@ -316,7 +337,7 @@ export default function ImageProcessing() {
           /* 图片水印设置 */
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">上传水印图片</label>
+              <label className="block text-sm font-medium mb-1">上传水印片</label>
               <Input 
                 type="file" 
                 accept="image/*"
@@ -403,11 +424,51 @@ export default function ImageProcessing() {
           <ImageCropper
             imageUrl={previewUrl}
             onCropComplete={(cropArea) => {
-              setCurrentCropArea(cropArea);  // 保存裁剪区域信息
+              setCurrentCropArea(cropArea);  // 保存裁剪区域息
             }}
             aspect={1}
           />
         )}
+      </div>
+    );
+  };
+
+  const renderCompressControls = () => {
+    if (selectedFeature !== 'compress') return null;
+
+    return (
+      <CompressControls
+        selectedFile={selectedFile}
+        onSettingsChange={setCompressSettings}
+      />
+    );
+  };
+
+  const renderAdjustControls = () => {
+    if (selectedFeature !== 'adjust') return null;
+
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="text-sm font-medium">亮度: {brightness}%</label>
+          <Slider
+            value={[parseInt(brightness)]}
+            min={0}
+            max={200}
+            step={1}
+            onValueChange={([value]) => setBrightness(value.toString())}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">对比度: {contrast}%</label>
+          <Slider
+            value={[parseInt(contrast)]}
+            min={0}
+            max={200}
+            step={1}
+            onValueChange={([value]) => setContrast(value.toString())}
+          />
+        </div>
       </div>
     );
   };
@@ -437,7 +498,7 @@ export default function ImageProcessing() {
                     <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500/10 to-indigo-500/20 text-blue-600 mr-2">
                       <Palette className="h-4 w-4" />
                     </div>
-                    选择功能
+                    选择能
                   </h2>
                   <div className="space-y-2">
                     {features.map(feature => (
@@ -475,7 +536,7 @@ export default function ImageProcessing() {
               {/* 右侧操作区域 */}
               <div className="lg:w-3/4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* 上传区域 */}
+                  {/* 上传区 */}
                   <div className="bg-white shadow-sm rounded-xl p-4">
                     <h2 className="text-base font-semibold mb-3 flex items-center text-gray-800">
                       <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500/10 to-indigo-500/20 text-blue-600 mr-2">
@@ -542,9 +603,11 @@ export default function ImageProcessing() {
                 {selectedFeature && (
                   <div className="mt-6">
                     <div className="bg-white shadow-sm rounded-xl p-4">
+                      {renderCompressControls()}
                       {renderResizeControls()}
                       {renderWatermarkControls()}
                       {renderCropControls()}
+                      {renderAdjustControls()}
                     </div>
                   </div>
                 )}
