@@ -49,7 +49,7 @@ const menuItems = [
   //     "AI图像生成",
   //     "背景去除",
   //     "图像修复",
-  //     "智能裁剪",
+  //     "���能裁剪",
   //     "颜色提取",
   //     "图像风格迁移",
   //   ]
@@ -114,7 +114,9 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <button className="tech-button">登录</button>
+          <Link href="/admin/login">
+            <button className="tech-button">登录</button>
+          </Link>
           <button className="tech-button bg-indigo-500 hover:bg-indigo-600">注册</button>
         </div>
 
@@ -133,8 +135,14 @@ export function Header() {
             <Link href="/test-page" className="block hover:text-blue-500 transition-colors duration-200">测试页</Link>
           </nav>
           <div className="mt-4 space-y-2">
-            <button className="w-full px-4 py-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">登录</button>
-            <button className="w-full px-4 py-2 rounded-full bg-indigo-500 text-white hover:bg-indigo-600 transition-colors duration-200">注册</button>
+            <Link href="/admin/login" className="block">
+              <button className="w-full px-4 py-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200">
+                登录
+              </button>
+            </Link>
+            <button className="w-full px-4 py-2 rounded-full bg-indigo-500 text-white hover:bg-indigo-600 transition-colors duration-200">
+              注册
+            </button>
           </div>
         </div>
       )}

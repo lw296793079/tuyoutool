@@ -21,9 +21,7 @@ export default function Home() {
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-5xl font-bold mb-6 animate-fade-in">快速、简单的在线工具平台</h1>
               <p className="text-xl mb-8 animate-fade-in animation-delay-200">一站式解决您的图片处理、格式转换和创意需求</p>
-              <Button size="lg" className="animate-fade-in animation-delay-400 bg-white text-blue-600 hover:bg-blue-50">
-                立即开始 <ArrowRight className="ml-2" />
-              </Button>
+             
             </div>
           </div>
         </section>
@@ -38,16 +36,18 @@ export default function Home() {
                 { title: "格式转换", desc: "图片、文档、音频、视频格式转换", href: "/format-conversion", icon: FileType },
                 { title: "生成工具", desc: "二维码、密码、名片设计等", href: "/generators", icon: Wand2 },
                 { title: "实用工具", desc: "计算器、OCR、图片拼接等", href: "/utilities", icon: Calculator },
-                { title: "测试页", desc: "实验新功能和设计", href: "/test-page", icon: Circle }, // 新增测试页
+                { title: "测试页", desc: "实验新功能和设计", href: "/test-page", icon: Circle },
               ].map((item, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 hover:scale-105">
-                  <item.icon className="w-12 h-12 text-blue-500 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                  <p className="text-gray-600 mb-4">{item.desc}</p>
-                  <Link href={item.href} className="text-blue-500 hover:text-blue-700 font-medium inline-flex items-center">
-                    了解更多 <ArrowRight className="ml-1 w-4 h-4" />
-                  </Link>
-                </div>
+                <Link href={item.href} key={index} className="block h-full">
+                  <div className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 hover:scale-105 h-full flex flex-col">
+                    <item.icon className="w-12 h-12 text-blue-500 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                    <p className="text-gray-600 mb-4 flex-grow">{item.desc}</p>
+                    <span className="text-blue-500 hover:text-blue-700 font-medium inline-flex items-center">
+                      了解更多 <ArrowRight className="ml-1 w-4 h-4" />
+                    </span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>

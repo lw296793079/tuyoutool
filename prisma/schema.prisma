@@ -1,0 +1,29 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Admin {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  lastLogin DateTime?
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  content   String   // 反馈内容
+  contact   String?  // 联系方式（可选）
+  status    String   @default("PENDING") // PENDING待处理 | PROCESSING处理中 | COMPLETED已完成 | REJECTED已拒绝
+  createdAt DateTime @default(now())     // 创建时间
+}
