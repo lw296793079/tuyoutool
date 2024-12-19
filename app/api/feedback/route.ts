@@ -35,14 +35,14 @@ export async function POST(request: Request) {
       userAgent
     } = await request.json()
     
-    // 获取用户 IP
+    // 获取用户 IP - 修改这部分
     const forwarded = request.headers.get("x-forwarded-for")
     const realIp = request.headers.get("x-real-ip")
     const ip = forwarded 
-      ? forwarded.split(',')[0] 
+      ? forwarded.split(',')[0].trim()
       : realIp 
         ? realIp 
-        : request.headers.get("x-client-ip") || '未知'
+        : '未知'
     
     // 获取 IP 属地
     let ipLocation = '未知'
