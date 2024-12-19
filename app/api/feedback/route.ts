@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       userAgent
     } = await request.json()
     
-    // 获取用户 IP - 修改这部分
+    // 获取用户 IP
     const forwarded = request.headers.get("x-forwarded-for")
     const realIp = request.headers.get("x-real-ip")
     const ip = forwarded 
@@ -47,11 +47,12 @@ export async function POST(request: Request) {
     // 获取 IP 属地
     let ipLocation = '未知'
     try {
-      // 使用更可靠的 IP 查询服务
-      const ipRes = await fetch(`https://ipapi.co/${ip}/json/`)
+      const ipRes = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`)
       const ipData = await ipRes.json()
-      if (!ipData.error) {
-        ipLocation = `${ipData.country_name} ${ipData.region} ${ipData.city}`
+      if (ipData.status === 'success') {
+        ipLocation = `${ipData.country} ${ipData.regionName} ${ipData.city}`
+      } else {
+        console.error('IP location lookup failed:', ipData)
       }
     } catch (error) {
       console.error('IP location lookup failed:', error)
