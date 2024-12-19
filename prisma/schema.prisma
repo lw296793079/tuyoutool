@@ -21,9 +21,49 @@ model Admin {
 }
 
 model Feedback {
-  id        Int      @id @default(autoincrement())
-  content   String   // 反馈内容
-  contact   String?  // 联系方式（可选）
-  status    String   @default("PENDING") // PENDING待处理 | PROCESSING处理中 | COMPLETED已完成 | REJECTED已拒绝
-  createdAt DateTime @default(now())     // 创建时间
+  id          Int           @id @default(autoincrement())
+  content     String        // 反馈内容
+  contact     String?       // 联系方式
+  status      String        @default("PENDING")
+  createdAt   DateTime      @default(now())
+  
+  // 新增基础信息
+  category    String        @default("OTHER")  // BUG/FEATURE/IMPROVEMENT/QUESTION/OTHER
+  priority    String        @default("NORMAL")  // HIGH/NORMAL/LOW
+  title       String?       // 反馈标题
+  
+  // 环境信息
+  browser     String?       // 浏览器信息
+  device      String?       // 设备类型
+  os          String?       // 操作系统
+  url         String?       // 来源页面
+  
+  // 处理信息
+  assignee    String?       // 处理人
+  response    String?       // 官方回复
+  resolvedAt  DateTime?     // 解决时间
+  
+  // 关联日志
+  logs        FeedbackLog[]
+  
+  // 新增字段
+  ip          String?
+  ipLocation  String?
+  screenSize  String?
+  language    String?
+  timeZone    String?
+  referrer    String?
+  routePath   String?
+  userAgent   String?
+  visitTime   DateTime @default(now())
+}
+
+model FeedbackLog {
+  id          Int       @id @default(autoincrement())
+  feedback    Feedback  @relation(fields: [feedbackId], references: [id])
+  feedbackId  Int
+  operator    String    // 操作人
+  action      String    // 动作类型
+  content     String    // 操作内容
+  createdAt   DateTime  @default(now())
 }

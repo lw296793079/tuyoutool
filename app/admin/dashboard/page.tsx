@@ -18,6 +18,15 @@ interface Feedback {
   contact: string
   status: string
   createdAt: string
+  ip: string
+  ipLocation: string
+  timeZone: string
+  language: string
+  screenSize: string
+  visitTime: string
+  userAgent: string
+  referrer: string
+  routePath: string
 }
 
 const statusColors = {
@@ -202,6 +211,23 @@ export default function Dashboard() {
                     联系方式: {feedback.contact}
                   </div>
                 )}
+                <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">用户信息</h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <div>IP: {feedback.ip}</div>
+                    <div>位置: {feedback.ipLocation}</div>
+                    <div>时区: {feedback.timeZone}</div>
+                    <div>语言: {feedback.language}</div>
+                    <div>分辨率: {feedback.screenSize}</div>
+                    <div>提交时间: {new Date(feedback.visitTime).toLocaleString()}</div>
+                    <div>来源: {feedback.referrer || '直接访问'}</div>
+                    <div>访问路径: {feedback.routePath}</div>
+                  </div>
+                  
+                  <div className="mt-2 text-xs text-gray-500">
+                    <div>User Agent: {feedback.userAgent}</div>
+                  </div>
+                </div>
               </div>
             ))}
 

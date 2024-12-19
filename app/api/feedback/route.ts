@@ -23,13 +23,55 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { feedback, contact } = await request.json()
+    const { 
+      content, 
+      contact, 
+      category,
+      screenSize,
+      language,
+      timeZone,
+      referrer,
+      routePath,
+      userAgent
+    } = await request.json()
     
+    // 获取用户 IP
+    const forwarded = request.headers.get("x-forwarded-for")
+    const realIp = request.headers.get("x-real-ip")
+    const ip = forwarded 
+      ? forwarded.split(',')[0] 
+      : realIp 
+        ? realIp 
+        : request.headers.get("x-client-ip") || '未知'
+    
+    // 获取 IP 属地
+    let ipLocation = '未知'
+    try {
+      // 使用更可靠的 IP 查询服务
+      const ipRes = await fetch(`https://ipapi.co/${ip}/json/`)
+      const ipData = await ipRes.json()
+      if (!ipData.error) {
+        ipLocation = `${ipData.country_name} ${ipData.region} ${ipData.city}`
+      }
+    } catch (error) {
+      console.error('IP location lookup failed:', error)
+    }
+
     const result = await prisma.feedback.create({
       data: {
-        content: feedback,
+        content,
         contact: contact || '',
         status: 'PENDING',
+        category: category || 'OTHER',
+        ip,
+        ipLocation,
+        screenSize,
+        language,
+        timeZone,
+        referrer,
+        routePath,
+        userAgent,
+        visitTime: new Date()
       },
     })
 

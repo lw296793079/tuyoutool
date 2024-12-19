@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "图优工具 - 快速、简单的在线图片编辑工具",
   description: "提供基础编辑、高级功能、证件相关和专业服务的在线图片处理平台",
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
