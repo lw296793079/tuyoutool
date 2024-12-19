@@ -26,22 +26,53 @@ interface FeedbackForm {
   visitTime: string;
 }
 
+const getUserInfo = () => {
+  // 确保代码运行在浏览器环境
+  if (typeof window === 'undefined') {
+    return {
+      browser: '',
+      device: '',
+      os: '',
+      url: '',
+      screenSize: '',
+      language: '',
+      timeZone: '',
+      referrer: '',
+      routePath: '',
+      userAgent: ''
+    }
+  }
+
+  return {
+    browser: getBrowserInfo(),
+    device: getDeviceType(),
+    os: getOSInfo(),
+    url: window.location.href,
+    screenSize: `${window.screen.width}x${window.screen.height}`,
+    language: navigator.language,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    referrer: document.referrer,
+    routePath: window.location.pathname,
+    userAgent: navigator.userAgent
+  }
+}
+
 export default function Feedback() {
   const [formData, setFormData] = useState<FeedbackForm>({
     title: "",
     content: "",
     contact: "",
     category: "OTHER",
-    browser: getBrowserInfo(),  // 自动获取
-    device: getDeviceType(),    // 自动获取
-    os: getOSInfo(),           // 自动获取
-    url: window.location.href,  // 自动获取
-    screenSize: `${window.screen.width}x${window.screen.height}`,
-    language: navigator.language,
-    userAgent: navigator.userAgent,
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    referrer: document.referrer,
-    routePath: window.location.pathname,
+    browser: getUserInfo().browser,
+    device: getUserInfo().device,
+    os: getUserInfo().os,
+    url: getUserInfo().url,
+    screenSize: getUserInfo().screenSize,
+    language: getUserInfo().language,
+    userAgent: getUserInfo().userAgent,
+    timeZone: getUserInfo().timeZone,
+    referrer: getUserInfo().referrer,
+    routePath: getUserInfo().routePath,
     visitTime: new Date().toISOString()
   });
 
@@ -65,16 +96,16 @@ export default function Feedback() {
           content: "",
           contact: "",
           category: "OTHER",
-          browser: getBrowserInfo(),  // 自动获取
-          device: getDeviceType(),    // 自动获取
-          os: getOSInfo(),           // 自动获取
-          url: window.location.href,  // 自动获取
-          screenSize: `${window.screen.width}x${window.screen.height}`,
-          language: navigator.language,
-          userAgent: navigator.userAgent,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          referrer: document.referrer,
-          routePath: window.location.pathname,
+          browser: getUserInfo().browser,
+          device: getUserInfo().device,
+          os: getUserInfo().os,
+          url: getUserInfo().url,
+          screenSize: getUserInfo().screenSize,
+          language: getUserInfo().language,
+          userAgent: getUserInfo().userAgent,
+          timeZone: getUserInfo().timeZone,
+          referrer: getUserInfo().referrer,
+          routePath: getUserInfo().routePath,
           visitTime: new Date().toISOString()
         })
       } else {
@@ -131,7 +162,7 @@ export default function Feedback() {
                 <Textarea
                   value={formData.content}
                   onChange={(e) => setFormData({...formData, content: e.target.value})}
-                  placeholder="请描述您的具体问题或建议，比如：功能使用时遇到的问题、希望新增的功能等..."
+                  placeholder="请描述您的具体问题或建议��比如：功能使用时遇到的问题、希望新增的功能等..."
                   required
                   className="min-h-[150px]"
                 />
