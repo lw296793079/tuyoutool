@@ -9,8 +9,11 @@ import {
   Settings, 
   LogOut,
   ChevronDown,
-  Search
+  Search,
+  LayoutGrid,
+  Table as TableIcon
 } from 'lucide-react'
+import { FeedbackTable } from "@/components/feedback-table"
 
 interface Feedback {
   id: number
@@ -49,6 +52,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("ALL")
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken")
@@ -100,6 +104,50 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("adminToken")
     router.push("/admin/login")
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('确定要删除这条反馈吗？')) return
+    
+    try {
+      const response = await fetch(`/api/feedback/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+      })
+      
+      if (response.ok) {
+        toast.success('删除成功')
+        fetchFeedbacks()  // 刷新列表
+      } else {
+        throw new Error('删除失败')
+      }
+    } catch (error) {
+      toast.error('删除失败')
+    }
+  }
+
+  const handleBatchDelete = async (ids: number[]) => {
+    try {
+      const response = await fetch('/api/feedback/batch', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify({ ids })
+      })
+      
+      if (response.ok) {
+        toast.success('批量删除成功')
+        fetchFeedbacks()  // 刷新列表
+      } else {
+        throw new Error('批量删除失败')
+      }
+    } catch (error) {
+      toast.error('批量删除失败')
+    }
   }
 
   const filteredFeedbacks = feedbacks.filter(feedback => {
@@ -167,6 +215,20 @@ export default function Dashboard() {
                 <option value="COMPLETED">已完成</option>
                 <option value="REJECTED">已拒绝</option>
               </select>
+              <div className="flex border rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setViewMode('card')}
+                  className={`p-2 ${viewMode === 'card' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
+                >
+                  <LayoutGrid className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`p-2 ${viewMode === 'table' ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'}`}
+                >
+                  <TableIcon className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             <button
               onClick={handleLogout}
@@ -180,63 +242,73 @@ export default function Dashboard() {
 
         {/* 反馈列表 */}
         <div className="p-8">
-          <div className="grid gap-6">
-            {filteredFeedbacks.map((feedback) => (
-              <div key={feedback.id} className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <span className="text-sm text-gray-500">
-                      #{feedback.id} · {new Date(feedback.createdAt).toLocaleString()}
-                    </span>
-                    <div className="mt-1">
-                      <span className={`px-3 py-1 rounded-full text-sm ${statusColors[feedback.status as keyof typeof statusColors]}`}>
-                        {statusText[feedback.status as keyof typeof statusText]}
+          {viewMode === 'table' ? (
+            <FeedbackTable 
+              feedbacks={filteredFeedbacks}
+              onStatusChange={handleStatusChange}
+              onRefresh={fetchFeedbacks}
+              onDelete={handleDelete}
+              onBatchDelete={handleBatchDelete}
+            />
+          ) : (
+            <div className="grid gap-6">
+              {filteredFeedbacks.map((feedback) => (
+                <div key={feedback.id} className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className="text-sm text-gray-500">
+                        #{feedback.id} · {new Date(feedback.createdAt).toLocaleString()}
                       </span>
+                      <div className="mt-1">
+                        <span className={`px-3 py-1 rounded-full text-sm ${statusColors[feedback.status as keyof typeof statusColors]}`}>
+                          {statusText[feedback.status as keyof typeof statusText]}
+                        </span>
+                      </div>
+                    </div>
+                    <select
+                      value={feedback.status}
+                      onChange={(e) => handleStatusChange(feedback.id, e.target.value)}
+                      className="border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="PENDING">待处理</option>
+                      <option value="PROCESSING">处理中</option>
+                      <option value="COMPLETED">已完成</option>
+                      <option value="REJECTED">已拒绝</option>
+                    </select>
+                  </div>
+                  <p className="text-gray-800 whitespace-pre-wrap">{feedback.content}</p>
+                  {feedback.contact && (
+                    <div className="mt-4 text-sm text-gray-600">
+                      联系方式: {feedback.contact}
+                    </div>
+                  )}
+                  <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">用户信息</h4>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                      <div>IP: {feedback.ip}</div>
+                      <div>位置: {feedback.ipLocation}</div>
+                      <div>时区: {feedback.timeZone}</div>
+                      <div>语言: {feedback.language}</div>
+                      <div>分辨率: {feedback.screenSize}</div>
+                      <div>提交时间: {new Date(feedback.visitTime).toLocaleString()}</div>
+                      <div>来源: {feedback.referrer || '直接访问'}</div>
+                      <div>访问路径: {feedback.routePath}</div>
+                    </div>
+                    
+                    <div className="mt-2 text-xs text-gray-500">
+                      <div>User Agent: {feedback.userAgent}</div>
                     </div>
                   </div>
-                  <select
-                    value={feedback.status}
-                    onChange={(e) => handleStatusChange(feedback.id, e.target.value)}
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="PENDING">待处理</option>
-                    <option value="PROCESSING">处理中</option>
-                    <option value="COMPLETED">已完成</option>
-                    <option value="REJECTED">已拒绝</option>
-                  </select>
                 </div>
-                <p className="text-gray-800 whitespace-pre-wrap">{feedback.content}</p>
-                {feedback.contact && (
-                  <div className="mt-4 text-sm text-gray-600">
-                    联系方式: {feedback.contact}
-                  </div>
-                )}
-                <div className="mt-4 bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">用户信息</h4>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    <div>IP: {feedback.ip}</div>
-                    <div>位置: {feedback.ipLocation}</div>
-                    <div>时区: {feedback.timeZone}</div>
-                    <div>语言: {feedback.language}</div>
-                    <div>分辨率: {feedback.screenSize}</div>
-                    <div>提交时间: {new Date(feedback.visitTime).toLocaleString()}</div>
-                    <div>来源: {feedback.referrer || '直接访问'}</div>
-                    <div>访问路径: {feedback.routePath}</div>
-                  </div>
-                  
-                  <div className="mt-2 text-xs text-gray-500">
-                    <div>User Agent: {feedback.userAgent}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))}
 
-            {filteredFeedbacks.length === 0 && (
-              <div className="text-center py-12 bg-white rounded-lg">
-                <div className="text-gray-500">暂无反馈数据</div>
-              </div>
-            )}
-          </div>
+              {filteredFeedbacks.length === 0 && (
+                <div className="text-center py-12 bg-white rounded-lg">
+                  <div className="text-gray-500">暂无反馈数据</div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

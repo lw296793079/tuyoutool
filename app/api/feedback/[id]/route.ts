@@ -26,4 +26,23 @@ export async function PATCH(request: Request, context: RouteParams) {
       { status: 500 }
     )
   }
+}
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await prisma.feedback.delete({
+      where: {
+        id: parseInt(params.id)
+      }
+    })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "删除失败" },
+      { status: 500 }
+    )
+  }
 } 
