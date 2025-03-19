@@ -5,33 +5,28 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Calculator, FileText, ImagePlus, Ruler, Settings, Wand2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import { MortgageCalculator } from "./mortgage-calculator/mortgage-calculator"
+import { UnitConverter } from "./unit-converter/unit-converter"
 
 // 定义功能类型
 const features = [
-  { id: 'calculator', title: "计算器", desc: "各种专业计算器", icon: Calculator },
-  { id: 'ocr', title: "OCR文字识别", desc: "从图像中提取文字", icon: FileText },
-  { id: 'image-merge', title: "图片拼接", desc: "创建拼图和拼接图", icon: ImagePlus },
+  { id: 'calculator', title: "房贷计算器", desc: "房贷月供等额计算", icon: Calculator },
   { id: 'unit-convert', title: "单位换算", desc: "各种单位间的转换", icon: Ruler }
 ]
 
 export default function Utilities() {
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState("")
-  const [result] = useState<string | null>(null)
+  const [result, setResult] = useState<string | null>(null)
+
+  const mortgageCalculator = MortgageCalculator()
+  const unitConverter = UnitConverter()
 
   // 渲染输入选项
   const renderInputOptions = () => {
     switch (selectedFeature) {
       case 'calculator':
-        return (
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="输入计算表达式..."
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-          />
-        )
+        return mortgageCalculator.renderInputOptions()
       case 'ocr':
         return (
           <input
@@ -62,26 +57,23 @@ export default function Utilities() {
           />
         )
       case 'unit-convert':
-        return (
-          <div className="space-y-4">
-            <input
-              type="number"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="输入数值..."
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-            />
-            <select className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20">
-              <option value="">选择单位类型</option>
-              <option value="length">长度</option>
-              <option value="weight">重量</option>
-              <option value="temperature">温度</option>
-            </select>
-          </div>
-        )
+        return unitConverter.renderInputOptions()
       default:
         return (
           <p className="text-sm text-gray-400">请先选择左侧功能...</p>
+        )
+    }
+  }
+
+  const renderResult = () => {
+    switch (selectedFeature) {
+      case 'calculator':
+        return mortgageCalculator.renderResult()
+      case 'unit-convert':
+        return unitConverter.renderResult()
+      default:
+        return (
+          <p className="text-sm text-gray-400">等待处理结果...</p>
         )
     }
   }
@@ -168,11 +160,7 @@ export default function Utilities() {
                       处理结果
                     </h2>
                     <div className="relative w-full aspect-video bg-gray-50 rounded-lg flex items-center justify-center border border-dashed border-gray-200">
-                      {result ? (
-                        <div className="p-4">{result}</div>
-                      ) : (
-                        <p className="text-sm text-gray-400">等待处理结果...</p>
-                      )}
+                      {renderResult()}
                     </div>
                   </div>
                 </div>

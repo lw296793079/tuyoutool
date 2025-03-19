@@ -36,7 +36,6 @@ export default function Home() {
                 { title: "格式转换", desc: "图片、文档、音频、视频格式转换", href: "/format-conversion", icon: FileType },
                 { title: "生成工具", desc: "二维码、密码、名片设计等", href: "/generators", icon: Wand2 },
                 { title: "实用工具", desc: "计算器、OCR、图片拼接等", href: "/utilities", icon: Calculator },
-                { title: "测试页", desc: "实验新功能和设计", href: "/test-page", icon: Circle },
               ].map((item, index) => (
                 <Link href={item.href} key={index} className="block h-full">
                   <div className="bg-white rounded-lg shadow-lg p-6 transition-transform duration-300 hover:scale-105 h-full flex flex-col">

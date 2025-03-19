@@ -15,6 +15,7 @@ const menuItems = [
       "调整亮度/对比度",
       "添加滤镜",
       "图片压缩",
+      "图片拼接",
     ]
   },
   {
@@ -30,8 +31,8 @@ const menuItems = [
     title: "生成工具",
     items: [
       "二维码生成",
-      "密码生成",
-      "名片设计",
+      "网络昵称生成",
+      
     ]
   },
   {
@@ -39,21 +40,10 @@ const menuItems = [
     items: [
       "计算器",
       "OCR文字识别",
-      "图片拼接",
       "单位换算",
     ]
   }
-  // {
-  //   title: "高级功能",
-  //   items: [
-  //     "AI图像生成",
-  //     "背景去除",
-  //     "图像修复",
-  //     "���能裁剪",
-  //     "颜色提取",
-  //     "图像风格迁移",
-  //   ]
-  // }
+
 ]
 
 export function Header() {
@@ -110,7 +100,6 @@ export function Header() {
           <Link href="/format-conversion" className="hover:text-blue-500 transition-colors duration-200">格式转换</Link>
           <Link href="/generators" className="hover:text-blue-500 transition-colors duration-200">生成工具</Link>
           <Link href="/utilities" className="hover:text-blue-500 transition-colors duration-200">实用工具</Link>
-          <Link href="/test-page" className="hover:text-blue-500 transition-colors duration-200">测试页</Link>
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
@@ -132,7 +121,7 @@ export function Header() {
             <Link href="/format-conversion" className="block hover:text-blue-500 transition-colors duration-200">格式转换</Link>
             <Link href="/generators" className="block hover:text-blue-500 transition-colors duration-200">生成工具</Link>
             <Link href="/utilities" className="block hover:text-blue-500 transition-colors duration-200">实用工具</Link>
-            <Link href="/test-page" className="block hover:text-blue-500 transition-colors duration-200">测试页</Link>
+          
           </nav>
           <div className="mt-4 space-y-2">
             <Link href="/admin/login" className="block">

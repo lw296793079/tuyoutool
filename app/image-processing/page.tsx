@@ -22,7 +22,8 @@ const features = [
   { id: 'watermark', title: "添加水印", desc: "为图片添加文字或图片水印", icon: FileText },
   { id: 'crop', title: "图片裁剪", desc: "自由裁剪图片区域", icon: Music },
   { id: 'adjust', title: "调整亮度/对比度", desc: "优化图片亮度和对比度", icon: Video },
-  { id: 'filter', title: "添加滤镜", desc: "应用专业的图片滤镜效果", icon: Palette }
+  { id: 'filter', title: "添加滤镜", desc: "应用专业的图片滤镜效果", icon: Palette },
+  { id: 'splice', title: "图片拼接", desc: "多张图片自由拼接", icon: ImageIcon },
 ]
 
 export default function ImageProcessing() {
@@ -49,8 +50,16 @@ export default function ImageProcessing() {
   const [brightness, setBrightness] = useState('100')
   const [contrast, setContrast] = useState('100')
   const [compressSettings, setCompressSettings] = useState<CompressSettings | null>(null)
-
-
+  const [spliceImages, setSpliceImages] = useState<Array<{
+    id: string;
+    file: File;
+    previewUrl: string;
+  }>>([])
+  const [spliceLayout, setSpliceLayout] = useState<'horizontal' | 'vertical' | 'grid'>('horizontal')
+  const [spliceGap, setSpliceGap] = useState(10)
+  const [spliceBackgroundColor, setSpliceBackgroundColor] = useState('#ffffff')
+  const [spliceGridColumns, setSpliceGridColumns] = useState(2)
+  const [syncSize, setSyncSize] = useState<'none' | 'min' | 'max'>('none')
 
   // 保持原有的文件处理函数
   const handleFileSelect = async (file: File) => {
@@ -77,6 +86,16 @@ export default function ImageProcessing() {
       URL.revokeObjectURL(url)
     }
     img.src = url
+
+    if (selectedFeature === 'splice') {
+      const newImage = {
+        id: Date.now().toString(),
+        file,
+        previewUrl: URL.createObjectURL(file)
+      }
+      setSpliceImages(prev => [...prev, newImage])
+      return
+    }
   }
 
   // 修改执行函数，先只处理尺寸调整
@@ -97,6 +116,11 @@ export default function ImageProcessing() {
     } else if (selectedFeature === 'compress' && !compressSettings) {
       toast.error("请设置压缩参数")
       return
+    } else if (selectedFeature === 'splice') {
+      if (spliceImages.length < 2) {
+        toast.error("请至少上传两张图片")
+        return
+      }
     } else if (selectedFeature !== 'crop' && selectedFeature !== 'compress' && !width && !height && !hasWatermarkSettings) {
       toast.error("至少设置一项处理选项")
       return
@@ -145,6 +169,21 @@ export default function ImageProcessing() {
             formData.append('watermarkSize', watermarkSize)
           }
         }
+      }
+
+      if (selectedFeature === 'splice') {
+        spliceImages.forEach((image, index) => {
+          formData.append(`image${index}`, image.file)
+        })
+        formData.append('layout', spliceLayout)
+        formData.append('gap', spliceGap.toString())
+        formData.append('backgroundColor', spliceBackgroundColor)
+        if (spliceLayout === 'grid') {
+          formData.append('gridColumns', spliceGridColumns.toString())
+        }
+        formData.append('syncSize', syncSize)
+        
+        apiEndpoint = '/api/splice-images'
       }
 
       const response = await fetch(apiEndpoint, {
@@ -473,6 +512,85 @@ export default function ImageProcessing() {
     );
   };
 
+  // 添加拼接控件渲染函数
+  const renderSpliceControls = () => {
+    if (selectedFeature !== 'splice') return null;
+
+    return (
+      <div className="space-y-4">
+        {/* 已上传图片列表和提示 */}
+        <div className="text-sm text-gray-500">
+          已上传 {spliceImages.length} 张图片, 至少需要2张图片才能拼接
+        </div>
+
+        {/* 拼接设置 */}
+        {spliceImages.length >= 2 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">拼接方式</label>
+              <select
+                value={spliceLayout}
+                onChange={(e) => setSpliceLayout(e.target.value as typeof spliceLayout)}
+                className="w-full rounded-md border-gray-300"
+              >
+                <option value="horizontal">横向拼接</option>
+                <option value="vertical">纵向拼接</option>
+                <option value="grid">网格拼接</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">图片间距(像素)</label>
+              <Input
+                type="number"
+                value={spliceGap}
+                onChange={(e) => setSpliceGap(parseInt(e.target.value))}
+                min={0}
+                max={100}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">背景颜色</label>
+              <Input
+                type="color"
+                value={spliceBackgroundColor}
+                onChange={(e) => setSpliceBackgroundColor(e.target.value)}
+              />
+            </div>
+
+            {spliceLayout === 'grid' && (
+              <div>
+                <label className="block text-sm font-medium mb-1">每行图片数</label>
+                <Input
+                  type="number"
+                  value={spliceGridColumns}
+                  onChange={(e) => setSpliceGridColumns(parseInt(e.target.value))}
+                  min={1}
+                  max={6}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 添加同步选项 */}
+        <div>
+          <label className="block text-sm font-medium mb-1">图片尺寸同步</label>
+          <select
+            value={syncSize}
+            onChange={(e) => setSyncSize(e.target.value as 'none' | 'min' | 'max')}
+            className="w-full rounded-md border-gray-300"
+          >
+            <option value="none">保持原始尺寸</option>
+            <option value="min">同步为最小尺寸</option>
+            <option value="max">同步为最大尺寸</option>
+          </select>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <main className="flex flex-col min-h-screen">
       <Header />
@@ -608,6 +726,7 @@ export default function ImageProcessing() {
                       {renderWatermarkControls()}
                       {renderCropControls()}
                       {renderAdjustControls()}
+                      {renderSpliceControls()}
                     </div>
                   </div>
                 )}
