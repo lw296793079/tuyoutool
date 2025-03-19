@@ -60,7 +60,7 @@ export default function Home() {
                 <h2 className="text-3xl font-bold mb-4 text-gray-800">智能图像处理</h2>
                 <p className="text-gray-600 mb-6">
                   利用最新的AI技术，我们的平台能够快速、精准地处理您的图片。
-                  无论是去除背景、修复受损图片，还是生成全新的图像，我们都能满足您的需求。
+                  无论是去除背景、修复受损图片，还是生成全新的图像，我们都能满足您的需求。如果对当前功能不满意，可以联系我们，我们会尽快更新。
                 </p>
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
                   探索AI功能
