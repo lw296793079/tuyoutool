@@ -3,19 +3,63 @@
 import { useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { QrCode, Key, CreditCard,  Settings, Wand2 } from 'lucide-react'
+import { QrCode, User, Settings, Wand2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import { QRCodeGenerator } from "./qrcode/qrcode-generator"
+import { NicknameGenerator } from "./nickname/nickname-generator"
 
 // 定义功能类型
 const features = [
   { id: 'qrcode', title: "二维码生成", desc: "创建自定义二维码", icon: QrCode },
-  { id: 'password', title: "密码生成", desc: "生成安全的随机密码", icon: Key },
-  { id: 'businesscard', title: "名片设计", desc: "设计专业的电子名片", icon: CreditCard },
+  { id: 'nickname', title: "网络昵称生成", desc: "生成独特有趣的网名", icon: User },
 ]
 
 export default function Generators() {
   const [selectedFeature, setSelectedFeature] = useState<string | null>(null)
-  const [generatedContent] = useState<string | null>(null)
+  
+  // 初始化功能生成器
+  const qrcodeGenerator = QRCodeGenerator()
+  const nicknameGenerator = NicknameGenerator()
+
+  // 根据选择的功能渲染不同的输入选项
+  const renderInputOptions = () => {
+    if (!selectedFeature) {
+      return (
+        <div className="text-center p-6">
+          <p className="text-gray-500">请从左侧选择一个功能</p>
+        </div>
+      );
+    }
+
+    switch (selectedFeature) {
+      case 'qrcode':
+        return qrcodeGenerator.renderInputOptions();
+        
+      case 'nickname':
+        return nicknameGenerator.renderInputOptions();
+        
+      default:
+        return null;
+    }
+  };
+  
+  // 渲染生成结果
+  const renderGeneratedContent = () => {
+    if (!selectedFeature) {
+      return <p className="text-sm text-gray-400">等待生成内容...</p>;
+    }
+    
+    switch (selectedFeature) {
+      case 'qrcode':
+        return qrcodeGenerator.renderGeneratedContent();
+        
+      case 'nickname':
+        return nicknameGenerator.renderGeneratedContent();
+        
+      default:
+        return <p className="text-sm text-gray-400">等待生成内容...</p>;
+    }
+  };
 
   return (
     <main className="flex flex-col min-h-screen">
@@ -26,7 +70,7 @@ export default function Generators() {
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-5xl font-bold mb-6 animate-fade-in">强大的在线生成工具</h1>
-              <p className="text-xl mb-8 animate-fade-in animation-delay-200">轻松创建二维码、密码、名片等</p>
+              <p className="text-xl mb-8 animate-fade-in animation-delay-200">轻松创建二维码、网络昵称等</p>
             </div>
           </div>
         </section>
@@ -83,14 +127,7 @@ export default function Generators() {
                       生成选项
                     </h2>
                     <div className="space-y-4">
-                      <input
-                        type="text"
-                        placeholder="请输入内容..."
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                      />
-                      <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-                        生成内容
-                      </Button>
+                      {renderInputOptions()}
                     </div>
                   </div>
 
@@ -103,11 +140,7 @@ export default function Generators() {
                       生成结果
                     </h2>
                     <div className="relative w-full aspect-video bg-gray-50 rounded-lg flex items-center justify-center border border-dashed border-gray-200">
-                      {generatedContent ? (
-                        <div className="p-4">{generatedContent}</div>
-                      ) : (
-                        <p className="text-sm text-gray-400">等待生成内容...</p>
-                      )}
+                      {renderGeneratedContent()}
                     </div>
                   </div>
                 </div>

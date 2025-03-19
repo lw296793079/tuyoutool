@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { FileText, Music, Video, Image as ImageIcon } from 'lucide-react'
+import { FileText, Music, Video, Image as ImageIcon, Download } from 'lucide-react'
+import { toast } from "sonner"
+import { FormatUploadZone } from "@/components/format-upload-zone"
 
 // 定义转换类型
 const conversionTypes = [
@@ -16,6 +18,205 @@ const conversionTypes = [
 
 export default function FormatConversion() {
   const [selectedType, setSelectedType] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [outputFormat, setOutputFormat] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
+  
+  // 当转换类型改变时，清空之前上传的文件和预览
+  useEffect(() => {
+    setSelectedFile(null);
+    setOutputFormat('');
+    setPreviewUrl(null); // 清空预览
+    
+    // 重置上传区域
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }, [selectedType]);
+  
+  // 文件选择处理函数
+  const handleFileSelect = (file: File) => {
+    // 检查是否是.doc文件
+    if (file.name.toLowerCase().endsWith('.doc')) {
+      toast.error("暂不支持.doc格式，请使用Word打开文件并另存为.docx格式后再上传", {
+        duration: 6000,  // 显示更长时间
+        action: {
+          label: '了解更多',
+          onClick: () => {
+            // 打开一个模态框，解释如何将.doc转换为.docx
+            alert('如何将.doc转换为.docx:\n\n1. 使用Microsoft Word打开文件\n2. 点击"文件" > "另存为"\n3. 选择"Word文档(.docx)"\n4. 点击保存');
+          }
+        }
+      });
+      return;
+    }
+    
+    // 根据选择的转换类型验证文件
+    if (selectedType === 'image' && !file.type.startsWith('image/')) {
+      toast.error("请上传图片文件");
+      return;
+    } else if (selectedType === 'document' && 
+               !(/\.(pdf|docx|txt)$/i.test(file.name) || 
+                 file.type === 'application/pdf' || 
+                 file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                 file.type === 'text/plain')) {
+      toast.error("请上传PDF、Word(docx)或TXT文档");
+      return;
+    } else if (selectedType === 'audio' && !file.type.startsWith('audio/')) {
+      toast.error("请上传音频文件");
+      return;
+    } else if (selectedType === 'video' && !file.type.startsWith('video/')) {
+      toast.error("请上传视频文件");
+      return;
+    }
+    
+    // 文件大小检查
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+      toast.error("文件大小不能超过10MB");
+      return;
+    }
+    
+    setSelectedFile(file);
+    
+    // 如果是图片，创建预览
+    if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+    } else {
+      setPreviewUrl(null)
+    }
+  }
+  
+  // 获取接受的文件类型
+  const getAcceptTypes = (type: string): string => {
+    switch (type) {
+      case 'image': 
+        return 'image/*';
+      case 'document': 
+        return '.pdf,.docx,.txt';
+      case 'audio': 
+        return 'audio/*';
+      case 'video': 
+        return 'video/*';
+      default: 
+        return '*/*';
+    }
+  }
+  
+  // 获取可用的输出格式
+  const getOutputFormats = (type: string | null): {value: string, label: string}[] => {
+    if (!type) return [];
+    
+    switch (type) {
+      case 'image':
+        return [
+          {value: 'jpg', label: 'JPG'},
+          {value: 'png', label: 'PNG'},
+          {value: 'webp', label: 'WebP'},
+          {value: 'gif', label: 'GIF'},
+          {value: 'tiff', label: 'TIFF'},
+          {value: 'ico', label: 'ICO (图标)'}
+        ];
+      case 'document':
+        return [
+          {value: 'pdf', label: 'PDF'},
+          {value: 'docx', label: 'Word (DOCX)'},
+          {value: 'txt', label: 'Text (TXT)'}
+        ];
+      case 'audio':
+        return [
+          {value: 'mp3', label: 'MP3'},
+          {value: 'wav', label: 'WAV'},
+          {value: 'ogg', label: 'OGG'},
+          {value: 'flac', label: 'FLAC'}
+        ];
+      case 'video':
+        return [
+          {value: 'mp4', label: 'MP4'},
+          {value: 'webm', label: 'WebM'},
+          {value: 'mov', label: 'MOV'},
+          {value: 'avi', label: 'AVI'}
+        ];
+      default:
+        return [];
+    }
+  }
+  
+  // 获取文件类型描述
+  const getFileTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'image': return '图片';
+      case 'document': return '文档';
+      case 'audio': return '音频';
+      case 'video': return '视频';
+      default: return '文件';
+    }
+  }
+  
+  // 转换处理函数
+  const handleConvert = async () => {
+    if (!selectedFile || !outputFormat) {
+      toast.error("请选择文件并设置输出格式");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('outputFormat', outputFormat);
+      
+      const response = await fetch('/api/convert-document', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || '转换失败');
+      }
+      
+      // 获取转换后的文件
+      const blob = await response.blob();
+      
+      // 创建下载链接
+      const url = URL.createObjectURL(blob);
+      
+      // 触发下载
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `converted.${outputFormat}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('转换成功');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      
+      // 特殊处理.doc格式错误
+      if (errorMessage.includes('.doc格式')) {
+        toast.error(errorMessage, { 
+          duration: 6000,  // 显示更长时间
+          action: {
+            label: '了解更多',
+            onClick: () => {
+              // 可以打开一个模态框，解释如何将.doc转换为.docx
+              alert('如何将.doc转换为.docx:\n\n1. 使用Microsoft Word打开文件\n2. 点击"文件" > "另存为"\n3. 选择"Word文档(.docx)"\n4. 点击保存');
+            }
+          }
+        });
+      } else {
+        toast.error(`转换失败: ${errorMessage}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <main className="flex flex-col min-h-screen">
@@ -89,12 +290,24 @@ export default function FormatConversion() {
                       </div>
                       选择文件
                     </h2>
-                    <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
-                      <Button className="bg-gradient-to-r from-green-500 to-teal-500 text-white">
-                        上传文件
-                      </Button>
-                      <p className="mt-2 text-sm text-gray-500">或将文件拖放到此处</p>
-                    </div>
+                    {selectedType ? (
+                      <FormatUploadZone 
+                        onFileSelect={handleFileSelect} 
+                        accept={getAcceptTypes(selectedType)}
+                        resetKey={selectedType}
+                        fileType={getFileTypeLabel(selectedType)}
+                      />
+                    ) : (
+                      <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
+                        <Button 
+                          className="bg-gradient-to-r from-green-500 to-teal-500 text-white"
+                          onClick={() => toast.info("请先选择左侧的转换类型")}
+                        >
+                          上传文件
+                        </Button>
+                        <p className="mt-2 text-sm text-gray-500">请先选择左侧的转换类型</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* 转换选项 */}
@@ -106,16 +319,35 @@ export default function FormatConversion() {
                       转换选项
                     </h2>
                     <div className="space-y-4">
-                      <select className="w-full rounded-lg border-gray-200 focus:border-green-500 focus:ring-green-500/20">
+                      <select 
+                        className="w-full rounded-lg border-gray-200 focus:border-green-500 focus:ring-green-500/20"
+                        value={outputFormat}
+                        onChange={(e) => setOutputFormat(e.target.value)}
+                        disabled={!selectedType || !selectedFile}
+                      >
                         <option value="">选择目标格式</option>
-                        <option value="jpg">JPG</option>
-                        <option value="png">PNG</option>
-                        <option value="webp">WebP</option>
+                        {getOutputFormats(selectedType).map(format => (
+                          <option key={format.value} value={format.value}>
+                            {format.label}
+                          </option>
+                        ))}
                       </select>
                       <Button 
                         className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-sm"
+                        onClick={handleConvert}
+                        disabled={!selectedFile || !outputFormat || isLoading}
                       >
-                        开始转换
+                        {isLoading ? (
+                          <span className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            转换中...
+                          </span>
+                        ) : (
+                          <span>开始转换</span>
+                        )}
                       </Button>
                     </div>
                   </div>
