@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import "./globals.css"
 import Script from 'next/script'
 import { Toaster } from "sonner"
+import BaiduAnalytics from './components/BaiduAnalytics'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,22 +22,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh" className="h-full">
-      
       <head>
-        {/* 移除这一行 */}
-        {/* <link rel="icon" href="/api/favicon" /> */}
       </head>
-
       <body className={`${inter.className} min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100`}>
+        <BaiduAnalytics />
         {children}
         <Toaster />
-        <Script 
-          strategy="afterInteractive"
-          id="baidu-analytics"
-          src="https://hm.baidu.com/hm.js?8b9813efd52e0e3e2ee0e973503ee144"
-        />
       </body>
     </html>
-  )
+  );
 }
 
