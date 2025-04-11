@@ -1,9 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from 'next/font/google'
 import "./globals.css"
-import Script from 'next/script'
 import { Toaster } from "sonner"
-import BaiduAnalytics from './components/BaiduAnalytics'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,11 +21,24 @@ export default function RootLayout({
   return (
     <html lang="zh" className="h-full">
       <head>
+        {/* 这里不能直接添加普通的 script 标签，因为 Next.js 会处理 head 内容 */}
       </head>
       <body className={`${inter.className} min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100`}>
-        <BaiduAnalytics />
         {children}
         <Toaster />
+        
+        {/* 在 body 末尾添加内联脚本 */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            var _hmt = _hmt || [];
+            (function() {
+              var hm = document.createElement("script");
+              hm.src = "https://hm.baidu.com/hm.js?178b58c6805627716ee6fa5f3b945f0c";
+              var s = document.getElementsByTagName("script")[0]; 
+              s.parentNode.insertBefore(hm, s);
+            })();
+          `
+        }} />
       </body>
     </html>
   );
