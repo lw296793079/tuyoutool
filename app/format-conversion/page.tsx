@@ -168,8 +168,25 @@ export default function FormatConversion() {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('outputFormat', outputFormat);
+      formData.append('conversionType', selectedType!);
       
-      const response = await fetch('/api/convert-document', {
+      // 根据转换类型选择不同的 API 端点
+      const apiEndpoint = (() => {
+        switch(selectedType) {
+          case 'image':
+            return '/api/convert-format';
+          case 'document':
+            return '/api/convert-document';
+          case 'audio':
+            return '/api/convert-audio';
+          case 'video':
+            return '/api/convert-video';
+          default:
+            throw new Error('未知的转换类型');
+        }
+      })();
+      
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         body: formData,
       });
