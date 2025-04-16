@@ -44,18 +44,25 @@ export async function POST(request: Request) {
         ? realIp 
         : '未知'
     
-    // 获取 IP 属地
     let ipLocation = '未知'
     try {
-      const ipRes = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`)
+      // 设置超时时间
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+      
+      const ipRes = await fetch(
+        `http://ip-api.com/json/${ip}?lang=zh-CN`,
+        { signal: controller.signal }
+      )
+      clearTimeout(timeoutId)
+      
       const ipData = await ipRes.json()
       if (ipData.status === 'success') {
         ipLocation = `${ipData.country} ${ipData.regionName} ${ipData.city}`
-      } else {
-        console.error('IP location lookup failed:', ipData)
       }
     } catch (error) {
       console.error('IP location lookup failed:', error)
+      // 继续执行，不影响反馈保存
     }
 
     const result = await prisma.feedback.create({
