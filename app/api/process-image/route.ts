@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
-import { createCanvas, loadImage } from 'canvas'
 
 // 辅助函数：将十六进制颜色转换为 RGBA
 function hexToRgba(hex: string, alpha: number) {
@@ -201,23 +200,25 @@ export async function POST(request: Request) {
         const opacityString = formData.get('opacity') as string
         const alphaValue = Math.min(Math.max(parseFloat(opacityString) / 100, 0), 1)
         
-        // 使用 Canvas 处理透明度
-        const watermark = await loadImage(watermarkBuffer)
-        const canvas = createCanvas(watermark.width, watermark.height)
-        const ctx = canvas.getContext('2d')
-        
-        
-        
-        // 清空画布并设置透明度
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.globalAlpha = alphaValue
-        ctx.drawImage(watermark, 0, 0)
-        
-        // 转回 Sharp 处理
-        const processedWatermark = await sharp(canvas.toBuffer('image/png'))  // 指定 PNG 格式以保持透明度
-          .resize({ width: targetWidth })
+        // 使用 sharp 处理水印图片
+        const processedWatermark = await sharp(watermarkBuffer)
+          .resize({ width: targetWidth }) // 调整大小
+          .ensureAlpha() // 确保有 alpha 通道
+          .composite([{
+            input: Buffer.from([
+              255, 255, 255, Math.round(alphaValue * 255) // 创建一个半透明的遮罩
+            ]),
+            raw: {
+              width: 1,
+              height: 1,
+              channels: 4
+            },
+            tile: true, // 平铺遮罩
+            blend: 'dest-in' // 使用遮罩的 alpha 值
+          }])
           .toBuffer()
 
+        // 将处理后的水印添加到原图
         image = image.composite([{
           input: processedWatermark,
           gravity: getGravity(position),
