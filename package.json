@@ -42,7 +42,8 @@
     "sharp": "^0.33.5",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "@napi-rs/canvas": "^0.1.44"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -58,8 +59,5 @@
   },
   "engines": {
     "node": ">=18.x"
-  },
-  "optionalDependencies": {
-    "canvas": "^2.11.2"
   }
 }
