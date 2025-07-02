@@ -1,0 +1,40 @@
+services:
+  # 数据库服务
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: tuyoutool
+      POSTGRES_USER: tuyouuser
+      POSTGRES_PASSWORD: your_secure_password_123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - tuyou-network
+
+  # 主应用服务
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://tuyouuser:your_secure_password_123@postgres:5432/tuyoutool
+      - NEXTAUTH_SECRET=your-nextauth-secret-key-here
+      - NEXTAUTH_URL=https://tuyoutool.com
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - tuyou-network
+
+volumes:
+  postgres_data:
+
+networks:
+  tuyou-network:
+    driver: bridge
